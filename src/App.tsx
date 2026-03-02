@@ -593,17 +593,32 @@ const MapViewPage = () => {
       </div>
 
       <div className="flex-1 flex gap-6 min-h-0">
-        <div className="flex-1 card relative bg-slate-50 overflow-hidden border-2 border-slate-200">
+        <div className="flex-1 card relative bg-[#f8fafc] overflow-hidden border-2 border-slate-200">
+          {/* Floating Search Bar */}
+          <div className="absolute top-4 left-4 z-20 flex gap-2">
+            <div className="relative shadow-lg">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search CivicPulse Maps..." 
+                className="bg-white border-none rounded-lg pl-9 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 w-72 shadow-xl"
+              />
+            </div>
+            <button className="p-2.5 bg-white rounded-lg shadow-xl hover:bg-slate-50 text-slate-600 border-none">
+              <Filter size={18} />
+            </button>
+          </div>
+
           {/* Map Controls */}
           <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
-            <button className="p-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-slate-600">
+            <button className="p-2 bg-white border border-slate-200 rounded-lg shadow-lg hover:bg-slate-50 text-slate-600">
               <ZoomIn size={20} />
             </button>
-            <button className="p-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-slate-600">
+            <button className="p-2 bg-white border border-slate-200 rounded-lg shadow-lg hover:bg-slate-50 text-slate-600">
               <ZoomOut size={20} />
             </button>
-            <button className="p-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-slate-600 mt-2">
-              <Maximize size={20} />
+            <button className="p-2 bg-white border border-slate-200 rounded-lg shadow-lg hover:bg-slate-50 text-slate-600 mt-2">
+              <Navigation size={20} className="text-primary" />
             </button>
           </div>
 
@@ -611,32 +626,23 @@ const MapViewPage = () => {
           <AnimatePresence>
             {activeDistrict && (
               <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="absolute top-4 left-4 z-10 w-64 bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl shadow-xl p-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="absolute bottom-24 left-4 z-10 w-64 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-2xl p-4"
               >
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-bold text-slate-900">{activeDistrict}</h4>
-                  <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Active Zone</span>
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Zone Stats</span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Total Issues</p>
-                    <p className="text-lg font-bold text-slate-900">24</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Open Issues</p>
+                    <p className="text-lg font-bold text-slate-900">12</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Resolved</p>
-                    <p className="text-lg font-bold text-emerald-600">18</p>
-                  </div>
-                </div>
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500">Response Rate</span>
-                    <span className="font-bold text-slate-900">92%</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-slate-100 rounded-full mt-2">
-                    <div className="h-full bg-primary rounded-full" style={{ width: '92%' }} />
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Avg. Time</p>
+                    <p className="text-lg font-bold text-blue-600">4.2h</p>
                   </div>
                 </div>
               </motion.div>
@@ -655,36 +661,102 @@ const MapViewPage = () => {
                   {/* River */}
                   <path 
                     d="M0,450 C150,420 250,480 400,450 C550,420 650,480 800,450 L800,500 C650,530 550,470 400,500 C250,530 150,470 0,500 Z" 
-                    className="fill-blue-200/50"
+                    className="fill-blue-200/40"
+                  />
+                  <path 
+                    d="M0,470 C150,440 250,500 400,470 C550,440 650,500 800,470" 
+                    className="fill-none stroke-blue-300/30 stroke-2"
                   />
                   
-                  {/* Districts */}
+                  {/* Districts Background */}
                   {districts.map(district => (
                     <path 
                       key={district.id}
                       d={district.path} 
                       className={cn(
-                        "transition-all duration-500 cursor-pointer stroke-slate-300 stroke-1",
+                        "transition-all duration-500 cursor-pointer stroke-slate-300/30 stroke-1",
                         district.color,
-                        activeDistrict === district.name ? "fill-primary/20 stroke-primary stroke-2" : ""
+                        activeDistrict === district.name ? "fill-primary/5 stroke-primary/30 stroke-2" : ""
                       )}
                       onMouseEnter={() => setActiveDistrict(district.name)}
                       onMouseLeave={() => setActiveDistrict(null)}
                     />
                   ))}
+
+                  {/* Building Blocks / Footprints (Simulated) */}
+                  <g className="fill-slate-200/40">
+                    {/* Central District Blocks */}
+                    <rect x="320" y="180" width="30" height="20" rx="2" />
+                    <rect x="360" y="180" width="40" height="20" rx="2" />
+                    <rect x="410" y="180" width="25" height="20" rx="2" />
+                    <rect x="320" y="210" width="50" height="30" rx="2" />
+                    <rect x="380" y="210" width="30" height="30" rx="2" />
+                    <rect x="420" y="210" width="40" height="30" rx="2" />
+                    <rect x="320" y="250" width="30" height="20" rx="2" />
+                    <rect x="360" y="250" width="60" height="20" rx="2" />
+                    
+                    {/* North Zone Blocks */}
+                    <rect x="450" y="60" width="40" height="25" rx="2" />
+                    <rect x="500" y="60" width="30" height="25" rx="2" />
+                    <rect x="450" y="95" width="20" height="20" rx="2" />
+                    <rect x="480" y="95" width="50" height="20" rx="2" />
+                  </g>
                   
-                  {/* Major Roads */}
-                  <g className="stroke-slate-300/40 fill-none stroke-[3] stroke-round">
+                  {/* Secondary Roads */}
+                  <g className="stroke-white fill-none stroke-[1.5] stroke-round">
+                    <path d="M350,150 L350,350" />
+                    <path d="M450,150 L450,350" />
+                    <path d="M300,200 L550,200" />
+                    <path d="M300,280 L550,280" />
+                    <path d="M100,250 L300,250" />
+                    <path d="M550,250 L750,250" />
+                  </g>
+
+                  {/* Major Roads / Highways */}
+                  <g className="stroke-amber-100 fill-none stroke-[6] stroke-round">
                     <path d="M400,0 L400,600" />
                     <path d="M0,300 L800,300" />
+                  </g>
+                  <g className="stroke-slate-300/40 fill-none stroke-[7] stroke-round">
+                    <path d="M400,0 L400,600" />
+                    <path d="M0,300 L800,300" />
+                  </g>
+                  
+                  {/* Other Major Roads */}
+                  <g className="stroke-white fill-none stroke-[4] stroke-round">
+                    <path d="M100,100 L700,500" />
+                    <path d="M100,500 L700,100" />
+                  </g>
+                  <g className="stroke-slate-300/40 fill-none stroke-[5] stroke-round">
                     <path d="M100,100 L700,500" />
                     <path d="M100,500 L700,100" />
                   </g>
 
                   {/* Parks / Greenery */}
-                  <circle cx="200" cy="400" r="40" className="fill-emerald-500/10" />
-                  <circle cx="600" cy="150" r="30" className="fill-emerald-500/10" />
-                  <rect x="350" y="50" width="100" height="40" rx="10" className="fill-emerald-500/10" />
+                  <g className="fill-emerald-500/10">
+                    <circle cx="200" cy="400" r="40" />
+                    <circle cx="600" cy="150" r="30" />
+                    <rect x="350" y="50" width="100" height="40" rx="10" />
+                  </g>
+
+                  {/* POI Markers (Static) */}
+                  <g className="fill-blue-400/40">
+                    <circle cx="380" cy="230" r="4" /> {/* Hospital */}
+                    <circle cx="480" cy="80" r="4" />  {/* School */}
+                  </g>
+                  <g className="fill-orange-400/40">
+                    <circle cx="120" cy="240" r="4" /> {/* Library */}
+                    <circle cx="620" cy="480" r="4" /> {/* Factory */}
+                  </g>
+
+                  {/* District Labels */}
+                  <g className="fill-slate-400 font-bold text-[9px] uppercase tracking-[0.2em] pointer-events-none opacity-40">
+                    <text x="380" y="260" textAnchor="middle">Central Business District</text>
+                    <text x="480" y="110" textAnchor="middle">North Heights</text>
+                    <text x="150" y="320" textAnchor="middle">West Park Estates</text>
+                    <text x="650" y="380" textAnchor="middle">East Industrial</text>
+                    <text x="400" y="540" textAnchor="middle">South Bay Marina</text>
+                  </g>
                 </svg>
                 
                 {/* Issue Markers */}
