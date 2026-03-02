@@ -1,0 +1,7 @@
+{
+  "name": "CivicPulse - Citizen Issue Processing System",
+  "description": "A modern SaaS dashboard for city authorities to manage and track infrastructure and service issues reported by citizens.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
