@@ -28,7 +28,11 @@ import {
   Droplets,
   Car,
   Trees,
-  MapPin
+  MapPin,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  Navigation
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -545,6 +549,26 @@ const IssuesPage = () => {
 };
 
 const MapViewPage = () => {
+  const [selectedMapIssue, setSelectedMapIssue] = useState<Issue | null>(null);
+  const [activeDistrict, setActiveDistrict] = useState<string | null>(null);
+
+  const districts = [
+    { id: 'central', name: 'Central District', path: 'M300,150 C350,130 450,130 500,150 L550,300 C500,350 400,380 300,350 L250,250 Z', color: 'fill-blue-500/10 hover:fill-blue-500/20' },
+    { id: 'north', name: 'North Zone', path: 'M200,50 C300,20 500,20 600,50 L650,150 C550,120 450,120 350,150 L250,180 Z', color: 'fill-emerald-500/10 hover:fill-emerald-500/20' },
+    { id: 'west', name: 'West Park', path: 'M50,200 L250,180 L300,350 L200,500 C100,450 50,350 50,200 Z', color: 'fill-amber-500/10 hover:fill-amber-500/20' },
+    { id: 'east', name: 'East Industrial', path: 'M550,300 L750,250 C780,350 750,500 600,550 L450,500 C500,450 550,400 550,300 Z', color: 'fill-rose-500/10 hover:fill-rose-500/20' },
+    { id: 'south', name: 'South Bay', path: 'M300,350 C400,380 500,350 550,300 L600,550 C450,580 300,580 200,500 Z', color: 'fill-indigo-500/10 hover:fill-indigo-500/20' },
+  ];
+
+  // Fixed positions for mock issues to look more realistic on the map
+  const markerPositions = [
+    { left: '42%', top: '22%' },
+    { left: '58%', top: '12%' },
+    { left: '38%', top: '45%' },
+    { left: '18%', top: '32%' },
+    { left: '65%', top: '48%' },
+  ];
+
   return (
     <div className="h-full flex flex-col space-y-6">
       <div className="flex items-center justify-between">
@@ -552,7 +576,15 @@ const MapViewPage = () => {
           <h1 className="text-2xl font-bold text-slate-900">City Map View</h1>
           <p className="text-slate-500">Visualize issue density and locations across the city districts.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input 
+              type="text" 
+              placeholder="Search location..." 
+              className="bg-white border border-slate-200 rounded-lg pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 w-64"
+            />
+          </div>
           <div className="flex bg-white border border-slate-200 rounded-lg p-1">
             <button className="px-3 py-1.5 text-sm font-medium bg-slate-100 rounded-md">Heatmap</button>
             <button className="px-3 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-md">Markers</button>
@@ -560,87 +592,223 @@ const MapViewPage = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex gap-6">
-        <div className="flex-1 card relative bg-slate-200 overflow-hidden">
+      <div className="flex-1 flex gap-6 min-h-0">
+        <div className="flex-1 card relative bg-slate-50 overflow-hidden border-2 border-slate-200">
+          {/* Map Controls */}
+          <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+            <button className="p-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-slate-600">
+              <ZoomIn size={20} />
+            </button>
+            <button className="p-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-slate-600">
+              <ZoomOut size={20} />
+            </button>
+            <button className="p-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-slate-600 mt-2">
+              <Maximize size={20} />
+            </button>
+          </div>
+
+          {/* District Info Overlay */}
+          <AnimatePresence>
+            {activeDistrict && (
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="absolute top-4 left-4 z-10 w-64 bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl shadow-xl p-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-bold text-slate-900">{activeDistrict}</h4>
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Active Zone</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Total Issues</p>
+                    <p className="text-lg font-bold text-slate-900">24</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Resolved</p>
+                    <p className="text-lg font-bold text-emerald-600">18</p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500">Response Rate</span>
+                    <span className="font-bold text-slate-900">92%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full mt-2">
+                    <div className="h-full bg-primary rounded-full" style={{ width: '92%' }} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Mock Map Background */}
-          <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
+          <div className="absolute inset-0 bg-[#f1f5f9]">
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:32px_32px]" />
+          </div>
+          
           <div className="absolute inset-0 flex items-center justify-center">
-             <div className="relative w-full h-full p-12">
+             <div className="relative w-full h-full p-8">
                 {/* SVG Mock Map */}
-                <svg viewBox="0 0 800 600" className="w-full h-full text-slate-400 fill-current opacity-30">
-                  <path d="M100,100 L700,100 L700,500 L100,500 Z" />
-                  <path d="M100,300 L700,300 M400,100 L400,500" stroke="white" strokeWidth="2" />
+                <svg viewBox="0 0 800 600" className="w-full h-full drop-shadow-xl">
+                  {/* River */}
+                  <path 
+                    d="M0,450 C150,420 250,480 400,450 C550,420 650,480 800,450 L800,500 C650,530 550,470 400,500 C250,530 150,470 0,500 Z" 
+                    className="fill-blue-200/50"
+                  />
+                  
+                  {/* Districts */}
+                  {districts.map(district => (
+                    <path 
+                      key={district.id}
+                      d={district.path} 
+                      className={cn(
+                        "transition-all duration-500 cursor-pointer stroke-slate-300 stroke-1",
+                        district.color,
+                        activeDistrict === district.name ? "fill-primary/20 stroke-primary stroke-2" : ""
+                      )}
+                      onMouseEnter={() => setActiveDistrict(district.name)}
+                      onMouseLeave={() => setActiveDistrict(null)}
+                    />
+                  ))}
+                  
+                  {/* Major Roads */}
+                  <g className="stroke-slate-300/40 fill-none stroke-[3] stroke-round">
+                    <path d="M400,0 L400,600" />
+                    <path d="M0,300 L800,300" />
+                    <path d="M100,100 L700,500" />
+                    <path d="M100,500 L700,100" />
+                  </g>
+
+                  {/* Parks / Greenery */}
+                  <circle cx="200" cy="400" r="40" className="fill-emerald-500/10" />
+                  <circle cx="600" cy="150" r="30" className="fill-emerald-500/10" />
+                  <rect x="350" y="50" width="100" height="40" rx="10" className="fill-emerald-500/10" />
                 </svg>
                 
                 {/* Issue Markers */}
-                {MOCK_ISSUES.map((issue, i) => (
-                  <motion.div
-                    key={issue.id}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="absolute cursor-pointer group"
-                    style={{ 
-                      left: `${20 + (i * 15)}%`, 
-                      top: `${30 + (i * 10)}%` 
-                    }}
-                  >
-                    <div className={cn(
-                      "w-4 h-4 rounded-full border-2 border-white shadow-lg",
-                      issue.priority === 'urgent' ? "bg-rose-500" : 
-                      issue.priority === 'high' ? "bg-orange-500" : "bg-blue-500"
-                    )} />
-                    
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-white rounded-lg shadow-xl p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30">
-                      <p className="text-xs font-bold text-slate-900">{issue.title}</p>
-                      <p className="text-[10px] text-slate-500 mt-1">{issue.location.address}</p>
-                      <div className="mt-2 flex items-center justify-between">
-                        <StatusBadge status={issue.status} />
-                        <PriorityBadge priority={issue.priority} />
+                {MOCK_ISSUES.map((issue, i) => {
+                  const isSelected = selectedMapIssue?.id === issue.id;
+                  const pos = markerPositions[i] || { left: '50%', top: '50%' };
+                  return (
+                    <motion.div
+                      key={issue.id}
+                      initial={{ scale: 0, y: 20 }}
+                      animate={{ scale: 1, y: 0 }}
+                      transition={{ delay: i * 0.1, type: 'spring', stiffness: 260, damping: 20 }}
+                      className="absolute cursor-pointer z-20"
+                      style={{ 
+                        left: pos.left, 
+                        top: pos.top 
+                      }}
+                      onClick={() => setSelectedMapIssue(issue)}
+                    >
+                      <div className="relative flex items-center justify-center">
+                        {isSelected && (
+                          <motion.div 
+                            layoutId="marker-ring"
+                            className="absolute -inset-4 bg-primary/20 rounded-full animate-ping"
+                          />
+                        )}
+                        <div className={cn(
+                          "relative w-7 h-7 rounded-full border-2 border-white shadow-xl flex items-center justify-center transition-all duration-300",
+                          isSelected ? "scale-125 z-30 ring-4 ring-primary/10" : "hover:scale-110",
+                          issue.priority === 'urgent' ? "bg-rose-500" : 
+                          issue.priority === 'high' ? "bg-orange-500" : "bg-blue-500"
+                        )}>
+                          <Navigation size={14} className="text-white rotate-45" />
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                      
+                      <AnimatePresence>
+                        {isSelected && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-64 bg-white rounded-2xl shadow-2xl p-4 z-40 border border-slate-100"
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <h4 className="text-sm font-bold text-slate-900 leading-tight">{issue.title}</h4>
+                              <button onClick={(e) => { e.stopPropagation(); setSelectedMapIssue(null); }} className="text-slate-400 hover:text-slate-600">
+                                <X size={14} />
+                              </button>
+                            </div>
+                            <p className="text-[11px] text-slate-500 mb-3 flex items-center gap-1">
+                              <MapPin size={10} />
+                              {issue.location.address}
+                            </p>
+                            <div className="flex items-center justify-between pt-3 border-t border-slate-50">
+                              <StatusBadge status={issue.status} />
+                              <button className="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+                                Details <ArrowRight size={12} />
+                              </button>
+                            </div>
+                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45 border-r border-b border-slate-100" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
              </div>
           </div>
           
-          <div className="absolute bottom-6 left-6 bg-white/90 backdrop-blur-sm p-4 rounded-xl border border-slate-200 shadow-lg space-y-2">
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Legend</h4>
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-rose-500" />
-              <span className="text-xs text-slate-600">Urgent Priority</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-orange-500" />
-              <span className="text-xs text-slate-600">High Priority</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-blue-500" />
-              <span className="text-xs text-slate-600">Standard</span>
+          <div className="absolute bottom-6 left-6 bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-slate-200 shadow-xl space-y-3 z-10">
+            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-widest">Map Legend</h4>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-rose-500 shadow-sm shadow-rose-200" />
+                <span className="text-xs font-medium text-slate-600">Urgent Priority</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-orange-500 shadow-sm shadow-orange-200" />
+                <span className="text-xs font-medium text-slate-600">High Priority</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-blue-500 shadow-sm shadow-blue-200" />
+                <span className="text-xs font-medium text-slate-600">Standard</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="w-80 space-y-4 overflow-y-auto">
-          <h3 className="font-bold text-slate-900">Nearby Issues</h3>
-          {MOCK_ISSUES.map(issue => (
-            <div key={issue.id} className="card p-4 hover:border-primary transition-colors cursor-pointer group">
-              <div className="flex items-start justify-between">
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-primary transition-colors">{issue.title}</h4>
-                <PriorityBadge priority={issue.priority} />
+        <div className="w-80 flex flex-col gap-4 min-h-0">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-slate-900">Nearby Issues</h3>
+            <span className="text-xs font-bold text-slate-400">{MOCK_ISSUES.length} Total</span>
+          </div>
+          <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-slate-200">
+            {MOCK_ISSUES.map(issue => (
+              <div 
+                key={issue.id} 
+                className={cn(
+                  "card p-4 transition-all duration-300 cursor-pointer group border-2",
+                  selectedMapIssue?.id === issue.id ? "border-primary bg-primary/5 shadow-md" : "hover:border-slate-300"
+                )}
+                onClick={() => setSelectedMapIssue(issue)}
+              >
+                <div className="flex items-start justify-between">
+                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-1">{issue.title}</h4>
+                  <PriorityBadge priority={issue.priority} />
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
+                  <MapPin size={12} className="text-slate-400" />
+                  {issue.location.address}
+                </p>
+                <div className="mt-4 flex items-center justify-between">
+                  <StatusBadge status={issue.status} />
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">{issue.district?.split(' ')[0]}</span>
+                    <button className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                <MapPin size={12} />
-                {issue.location.address}
-              </p>
-              <div className="mt-3 flex items-center justify-between">
-                <StatusBadge status={issue.status} />
-                <button className="text-primary">
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

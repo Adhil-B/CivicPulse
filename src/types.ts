@@ -17,6 +17,7 @@ export interface Issue {
     name: string;
     email: string;
   };
+  district?: string;
   assignedTo?: string;
   createdAt: string;
   updatedAt: string;
